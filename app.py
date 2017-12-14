@@ -21,54 +21,69 @@ dynamodb_client = boto3.client("dynamodb", region_name="us-west-2",
                                endpoint_url="https://dynamodb.us-"
                                + "west-2.amazonaws.com")
 
-if reasons not in dynamodb_client.list_tables()["TableNames"]:
-    dynamodb_client.create_table(
-        TableName=reasons,
-        KeySchema=[
-            {
-                "AttributeName": "ID",
-                "KeyType": "HASH"
-            },
-            {
-                "AttributeName": "Reasons",
-                "KeyType": "RANGE"
-            }
-        ],
-        AttributeDefinitions=[
-            {
-                "AttributeName": "ID",
-                "AttributeType": "N"
-            },
-            {
-                "AttributeName": "Reasons",
-                "AttributeType": "S"
-            }
-        ],
-        ProvisionedThroughput={
-            "ReadCapacityUnits": 10,
-            "WriteCapacityUnits": 10
-        }
-    )
-    time.sleep(15)  # Allows time for server to create table.
 
-    reasons_table = dynamodb_resource.Table(reasons)
+def dynamodb_create_table():
+    """AWS DynamoDB creates a new table called "Reasons".
+    The table is populated with information from Reasons.csv.
 
-    with open("Reasons.csv", "r") as csvfile:
-        reasons_file = csv.reader(csvfile, delimiter=" ")
-        counter = 0
-        for reason in reasons_file:
-            table.put_item(
-                Item={
-                    "ID": counter,
-                    "Reasons": " ".join(reason)
+    """
+    if reasons not in dynamodb_client.list_tables()["TableNames"]:
+        dynamodb_client.create_table(
+            TableName=reasons,
+            KeySchema=[
+                {
+                    "AttributeName": "ID",
+                    "KeyType": "HASH"
+                },
+                {
+                    "AttributeName": "Reasons",
+                    "KeyType": "RANGE"
                 }
-            )
+            ],
+            AttributeDefinitions=[
+                {
+                    "AttributeName": "ID",
+                    "AttributeType": "N"
+                },
+                {
+                    "AttributeName": "Reasons",
+                    "AttributeType": "S"
+                }
+            ],
+            ProvisionedThroughput={
+                "ReadCapacityUnits": 10,
+                "WriteCapacityUnits": 10
+            }
+        )
 
-            counter += 1
+        # This holds the code from running, giving
+        # time for the server to create the table.
+        time.sleep(15)
+
+        reasons_table = dynamodb_resource.Table(reasons)
+
+        with open("Reasons.csv", "r") as csvfile:
+            reasons_file = csv.reader(csvfile, delimiter=" ")
+            counter = 0
+            for reason in reasons_file:
+                table.put_item(
+                    Item={
+                        "ID": counter,
+                        "Reasons": " ".join(reason)
+                    }
+                )
+
+                counter += 1
 
 
 @app.schedule(Rate(1, unit=Rate.HOURS))
 def email_lambda_function(event):
+    """AWS Lambda function that pulls from the "Reasons" DynamoDB table
+    and uses SES to send an email.
+
+    The decorator is an indicator for CloudWatch to create a rule and
+    schedule an event for this Lambda function to run every hour.
+    """
     try:
         reasons_table = dynamodb_resource.Table(reasons)
         rand_int = random.randint(0, 25)
@@ -96,4 +111,8 @@ def email_lambda_function(event):
 
 @app.route("/")
 def index():
+    """AWS Chalice app requires one function to use the above decorator
+    as a default. Otherwise, this function serves no purpose.
+
+    """
     pass
