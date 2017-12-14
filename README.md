@@ -16,8 +16,7 @@ hour to a list of desired recipients.
 3. Get an AWS Account and verify your credentials
 
 ## Getting Started
-First, you can download app.py and Reasons.csv from the repo (or if you'd like to store your own email messages,
-feel free to make your own Reasons.csv).
+First, you can download app.py from the repo.
 
 The following lines are Linux-based examples in Terminal detailing how to get the application up and running.
 
@@ -29,8 +28,7 @@ $ chalice new project [name of app]
 
 which will create a new folder.
 
-Next, you will want to replace the new app.py in the new folder with the app.py you downoaded, and you also
-should place Reasons.csv in the directory as well.
+Next, you will want to replace the new app.py in the new folder with the app.py you downoaded.
 
 Lastly, you can launch the project with
 
